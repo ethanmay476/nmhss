@@ -1,0 +1,88 @@
+---
+title: "Statistical Analysis of SRVC62 by every other variable"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(broom)
+library(knitr)
+library(kableExtra)
+# Assuming your data is loaded into a dataframe named `data`
+# data <- read.csv("your_data.csv")
+load("~/GitHub/nmhss/data/data_start_2014_filter.rda")
+
+
+
+
+is_binary_factor <- function(column) {
+  if (is.factor(column)) {
+    return(all(levels(column) %in% c("0", "1")))
+  } else {
+    return(TRUE) # Keep non-factor columns
+  }
+}
+
+
+# data_2014 <- filter(data_start_2014_filter, YEAR == 2014)
+# data_2015 <- filter(data_start_2014_filter, YEAR == 2015)
+# data_2016 <- filter(data_start_2014_filter, YEAR == 2016)
+# data_2017 <- filter(data_start_2014_filter, YEAR == 2017)
+# data_2018 <- filter(data_start_2014_filter, YEAR == 2018)
+# data_2019 <- filter(data_start_2014_filter, YEAR == 2019)
+# data_2020 <- filter(data_start_2014_filter, YEAR == 2020)
+```
+
+```{r setup, echo=FALSE}
+# Use sapply to check each column, then filter with select
+binary_data <- data_start_2014_filter %>% select(which(sapply(., is_binary_factor)))
+data <- binary_data
+
+
+# Preparing the data: Ensure all variables are factors or convert them as needed
+data <- data %>% mutate_if(is.numeric, as.factor)
+
+perform_chi_square <- function(data, var1, var2) {
+  table <- table(data[[var1]], data[[var2]])
+  test <- chisq.test(table)
+  tidy(test)
+}
+
+perform_two_prop_z_test <- function(data, var1, var2) {
+  # Extracting the proportions for the two groups
+  table <- table(data[[var1]], data[[var2]])
+  x <- c(table[1,1], table[2,1]) # Success counts
+  n <- c(sum(table[1,]), sum(table[2,])) # Total counts
+  
+  test <- prop.test(x, n)
+  tidy(test)
+}
+```
+
+```{r results='asis', echo=FALSE}
+target_var <- "SRVC62"
+other_vars <- setdiff(names(data), target_var)
+
+results <- list()
+
+for (var in other_vars) {
+  chi_square_result <- perform_chi_square(data, target_var, var)
+  two_prop_z_result <- perform_two_prop_z_test(data, target_var, var)
+  
+  # Combine results
+  combined_results <- bind_rows(Chi_square = chi_square_result, Two_prop_Z = two_prop_z_result, .id = "Test")
+  combined_results$Variable <- var
+  
+  results[[var]] <- combined_results
+}
+
+# Combine all results into a single dataframe
+final_results <- bind_rows(results, .id = "Comparison")
+```
+
+```{r echo=FALSE}
+final_results %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```

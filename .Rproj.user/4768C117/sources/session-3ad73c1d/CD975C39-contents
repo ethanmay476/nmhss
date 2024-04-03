@@ -1,0 +1,75 @@
+# Load necessary libraries
+library(tidyverse)
+library(broom)
+library(knitr)
+library(kableExtra)
+# Assuming your data is loaded. Replace with your actual data loading line if different
+load("~/GitHub/nmhss/data/data_start_2014_filter.rda")
+
+# Function to check if a variable is a binary factor
+is_binary_factor <- function(column) {
+  if (is.factor(column)) {
+    return(all(levels(column) %in% c("0", "1")))
+  } else {
+    return(TRUE) # Keep non-factor columns
+  }
+}
+
+data_2014 <- filter(data_start_2014_filter, YEAR == 2014)
+data_2015 <- filter(data_start_2014_filter, YEAR == 2015)
+data_2016 <- filter(data_start_2014_filter, YEAR == 2016)
+data_2017 <- filter(data_start_2014_filter, YEAR == 2017)
+data_2018 <- filter(data_start_2014_filter, YEAR == 2018)
+data_2019 <- filter(data_start_2014_filter, YEAR == 2019)
+data_2020 <- filter(data_start_2014_filter, YEAR == 2020)
+
+
+
+
+
+# Keep only binary factor columns
+binary_data <- data_2014 %>% select(which(sapply(., is_binary_factor)))
+data <- binary_data
+
+# Ensure all variables are factors
+data <- data %>% mutate_if(is.numeric, as.factor)
+
+# Chi-square test function
+perform_chi_square <- function(data, var1, var2) {
+  table <- table(data[[var1]], data[[var2]])
+  test <- chisq.test(table)
+  tidy(test)
+}
+
+# Fisher's exact test function
+perform_fishers_exact <- function(data, var1, var2) {
+  table <- table(data[[var1]], data[[var2]])
+  test <- fisher.test(table)
+  tidy(test)
+}
+
+# Analysis
+target_var <- "SRVC62"
+other_vars <- setdiff(names(data), target_var)
+
+results <- list()
+
+for (var in other_vars) {
+  chi_square_result <- perform_chi_square(data, target_var, var)
+  fishers_exact_result <- perform_fishers_exact(data, target_var, var)
+
+  # Combine results
+  combined_results <- bind_rows(Chi_square = chi_square_result, Fishers_Exact = fishers_exact_result, .id = "Test")
+  combined_results$Variable <- var
+
+  results[[var]] <- combined_results
+}
+
+# Combine all results into a single dataframe
+final_results <- bind_rows(results, .id = "Comparison")
+
+# Output to PDF
+pdf("analysis_results.pdf", width = 8, height = 11)
+print(kable(final_results, format = "latex") %>%
+        kable_styling(bootstrap_options = c("striped", "hover")))
+dev.off()

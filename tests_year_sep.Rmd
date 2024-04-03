@@ -1,0 +1,107 @@
+---
+title: "Statistical Analysis of SRVC62 by Every Other Variable, by Year"
+output: pdf_document
+---
+
+---
+title: "Statistical Analysis of SRVC62 by Every Other Variable, by Year"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(broom)
+library(knitr)
+library(kableExtra)
+# Assuming your data is loaded into a dataframe named `data`
+# data <- read.csv("your_data.csv")
+load("~/GitHub/nmhss/data/data_start_2014_filter.rda")
+
+is_binary_factor <- function(column) {
+  if (is.factor(column)) {
+    return(all(levels(column) %in% c("0", "1")))
+  } else {
+    return(TRUE) # Keep non-factor columns
+  }
+}
+
+# perform_chi_square <- function(data, var1, var2) {
+#   table <- table(data[[var1]], data[[var2]])
+#   test <- tryCatch({
+#     chisq.test(table)
+#   }, warning = function(w) {
+#     return(NA)
+#   }, error = function(e) {
+#     return(NA)
+#   }, finally = {})
+#   tidy(test)
+# }
+
+perform_two_prop_z_test <- function(data, var1, var2) {
+  table <- table(data[[var1]], data[[var2]])
+  x <- c(table[1,1], table[2,1]) # Success counts
+  n <- c(sum(table[1,]), sum(table[2,])) # Total counts
+  
+  test <- tryCatch({
+    prop.test(x, n)
+  }, warning = function(w) {
+    return(NA)
+  }, error = function(e) {
+    return(NA)
+  }, finally = {})
+  tidy(test)
+}
+
+```
+
+```{r year-analysis, echo=FALSE, results='asis'}
+years <- unique(data_start_2014_filter$YEAR)
+
+for (year in years) {
+  cat("\\pagebreak")
+  cat(sprintf("## Statistical Analysis for %s \n", year))
+  
+  data_year <- filter(data_start_2014_filter, YEAR == year) %>% 
+               select(which(sapply(., is_binary_factor))) %>%
+               mutate_if(is.numeric, as.factor)
+  
+  target_var <- "SRVC62"
+  other_vars <- setdiff(names(data_year), target_var)
+  
+  results <- list()
+  
+  for (var in other_vars) {
+    if (var != "YEAR") {
+      # chi_square_result <- perform_chi_square(data_year, target_var, var)
+      two_prop_z_result <- perform_two_prop_z_test(data_year, target_var, var)
+      
+      # Filter out unnecessary columns here
+      # chi_square_result <- chi_square_result %>%
+      #                      select(-statistic, -method) # Exclude 'statistic' and 'method'
+      two_prop_z_result <- two_prop_z_result %>%
+                           select(-statistic, -method) # Exclude 'statistic' and 'method'
+      
+      # Combine results
+      combined_results <- bind_rows(
+                                    # Chi_square = chi_square_result, 
+                                    Two_prop_Z = two_prop_z_result, 
+                                    .id = "Test")
+      combined_results$Variable <- var
+      
+      results[[var]] <- combined_results
+    }
+  }
+  
+  # Combine all results into a single dataframe
+  final_results <- bind_rows(results, .id = "Comparison")
+  
+  # Exclude the 'df' (degrees of freedom) and 'method' columns from the final table
+  final_results <- final_results %>% 
+                    select(Comparison,Test,p.value,parameter) # Adjust as needed
+  
+  # Output the results for this year
+  print(kable(final_results, caption = sprintf("Statistical Analysis for Year %s", year)) %>% 
+          kable_styling(bootstrap_options = c("striped", "hover")))
+}
+
+```

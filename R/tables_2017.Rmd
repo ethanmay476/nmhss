@@ -1,0 +1,48 @@
+---
+title: "Variable Comparison 2017"
+output: pdf_document
+---
+
+```{r}
+library(knitr)
+library(dplyr)
+library(tidyr)
+
+# Assuming your dataset is named 'data'
+# If it's not, change the line below to load your dataset
+load("~/GitHub/nmhss/data/data_start_2014_filter.rda")
+
+data_2017 <- filter(data_start_2014_filter, YEAR == 2017)
+
+
+
+
+is_binary_factor <- function(column) {
+  if (is.factor(column)) {
+    return(all(levels(column) %in% c("0", "1")))
+  } else {
+    return(TRUE) # Keep non-factor columns
+  }
+}
+
+# Use sapply to check each column, then filter with select
+binary_data <- data_2017 %>% select(which(sapply(., is_binary_factor)))
+data <- binary_data
+# Function to generate a comparison table for two variables using pivot_wider
+generate_table <- function(data, var1, var2) {
+  data %>%
+    count(!!sym(var1), !!sym(var2)) %>% 
+    pivot_wider(names_from = !!sym(var2), values_from = n, values_fill = list(n = 0)) %>%
+    kable(caption = paste("Comparison of", var1, "and", var2)) %>%
+    print()
+}
+
+# Loop through each variable, comparing it with every other variable
+for (var1 in names(data)) {
+  for (var2 in names(data)) {
+    if (var1 != var2) {
+      generate_table(data, var1, var2)
+    }
+  }
+}
+```

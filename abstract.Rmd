@@ -1,0 +1,12 @@
+---
+title: "The Evolution of Mental Health Care: Insights from Nationwide Service Data"
+author: "Ethan May"
+date: "2024-03-01"
+output: pdf_document
+---
+
+  Every year since 2014 the Substance Abuse and Mental Health Services Administration conducts a survey that collects data on the characteristics and services of all know mental health facilities in the United States. And every other year the survey also collects data on the demographics of the people served in these facilities. This project aims to analyze the distribution of mental health services offered across different states with the goal of identifying gaps in mental health services. By examining changes in service availability, types, and accessibility, especially for underserved groups such as non-English speakers, LGBTQ+ individuals, veterans, and others, we intend to evaluate the impact of policy shifts and funding adjustments on mental health service landscapes. Additionally, this project seeks to understand the evolution of mental health care provision, identifying trends in telemedicine adoption, integrated treatments, and specialized services. The goal of this project is to offer actionable insights for policymakers and health care providers, aiming to improve the reach and quality of mental health services nationwide, ensuring equitable access for all communities.
+
+
+
+

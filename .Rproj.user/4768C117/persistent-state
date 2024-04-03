@@ -1,0 +1,8 @@
+build-last-errors="[]"
+build-last-errors-base-dir=""
+build-last-outputs="[]"
+compile_pdf_state="{\"tab_visible\":true,\"running\":false,\"target_file\":\"~/GitHub/nmhss/tables_document.tex\",\"output\":\"Running pdflatex.exe on tables_document.tex...failed\\nError running C:/Users/Ethan May/AppData/Local/Programs/MiKTeX/miktex/bin/x64/pdflatex.exe (exit code -1073740791)\\n\",\"errors\":[]}"
+files.monitored-path=""
+find-in-files-state="{\"handle\":\"\",\"input\":\"\",\"path\":\"\",\"regex\":false,\"ignoreCase\":false,\"results\":{\"file\":[],\"line\":[],\"lineValue\":[],\"matchOn\":[],\"matchOff\":[],\"replaceMatchOn\":[],\"replaceMatchOff\":[]},\"running\":false,\"replace\":false,\"preview\":false,\"gitFlag\":false,\"replacePattern\":\"\"}"
+imageDirtyState="1"
+saveActionState="-1"

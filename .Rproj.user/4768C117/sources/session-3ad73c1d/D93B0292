@@ -1,0 +1,28 @@
+{
+    "id": "D93B0292",
+    "path": "~/GitHub/nmhss/tests_year_sep.Rmd",
+    "project_path": "tests_year_sep.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1712092675497.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "57,0",
+        "scrollLine": "45",
+        "last_setup_crc32": "3ad73c1dffacf6ca"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1712095334,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1712095334698,
+    "read_only": false,
+    "read_only_alternatives": []
+}

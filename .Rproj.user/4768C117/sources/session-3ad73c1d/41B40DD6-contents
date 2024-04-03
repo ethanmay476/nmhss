@@ -1,0 +1,64 @@
+---
+title: "Transformation of Mental Health Care: Insights from Nationwide Service Data Analysis"
+author: "Ethan May"
+date: "2024-03-20"
+output: pdf_document
+---
+
+ABSTRACT
+
+|   Since 2014, the Substance Abuse and Mental Health Services Administration has conducted annual surveys on mental health facility characteristics and biennial surveys on demographics of those served in the United States. This project aims to analyze the distribution of mental health services across states to identify gaps in service provision. By examining changes in service availability, types, and accessibility, particularly for underserved groups like non-English speakers, LGBTQ+ individuals, veterans, and others, this project intends to assess the impact of policy shifts and funding adjustments on mental health service landscapes. Additionally, this project seeks to understand the evolution of mental health care by identifying trends in telemedicine adoption, integrated treatments, and specialized services. The objective is to provide actionable insights for policymakers and healthcare providers, with the aim of enhancing the reach and quality of mental health services nationwide, ensuring equitable access for all communities.
+
+INTRODUCTION
+
+|   The foundation of this research is solidly built on the Substance Abuse and Mental Health Services Administration's (SAMHSA) National Mental Health Services Survey (N-MHSS). Since 2014, this survey has methodically documented the features of mental health facilities and the demographics of those they serve across the United States. With data collected annually from more than 10,000 public and private mental health treatment facilities, the N-MHSS offers an unparalleled lens through which to examine the nation's mental health service ecosystem. This exploration extends to a variety of facility types, including community mental health centers, inpatient and outpatient facilities, residential treatment centers, and substance abuse treatment facilities, each playing a distinct role in the broader mental health care landscape.
+
+|   The motivation for embarking on this project stems from a desire to dissect the distribution of mental health services across states, with a nuanced focus on the diversity of facility types. This analysis aims to identify potential service provision gaps and assess how inclusively services are offered, particularly to marginalized and underserved groups such as LGBTQ+ individuals, veterans, and non-English speaking communities. A preliminary dive into the N-MHSS dataset uncovers a rich mosaic of service availability, highlighting not just the breadth of care offered across the spectrum of facility types but also the adoption of innovative delivery methods like telemedicine. This initial data gathering phase validates the feasibility of this research and paves the way for an in-depth investigation into the complexities and nuances of mental health service provision.
+
+METHODS
+
+|   The reliability of the data is validated by the integrity of the Substance Abuse and Mental Health Services Administration's National Mental Health Services Survey (N-MHSS) data. The N-MHSS, renowned for its comprehensive coverage and meticulous data collection methodology, targets every known public and private mental health treatment facility across the United States. Given the survey's extensive reach and the standardized approach to gathering information, the N-MHSS dataset provides a reliable foundation for analyzing the distribution and characteristics of mental health services nationwide.
+
+EXPECTED OUTCOMES
+
+|   The analytical core of this study will employ a suite of statistical tests to uncover trends, disparities, and the impact of policy changes on the mental health service landscape. A key component of this analysis will involve the use of statisical tests such as one-way ANOVA to compare the mean number of services offered across different states or years, providing insights into geographical and temporal variations in service provision. This method will enable us to identify statistically significant differences in service availability, which could be indicative of policy or funding disparities.
+
+|   Beyond one-way ANOVA, it is anticipated that their will be a need for more sophisticated statistical modeling to account for the complex nature of the data and the multifaceted relationships between variables. For instance, mixed-effects models may be employed to analyze changes over time while accounting for the nested structure of the data (e.g., services within facilities within states). Moreover, regression analyses could be utilized to explore the determinants of service provision and telemedicine adoption, including the role of demographic factors and facility characteristics.
+
+|   Overall, it is expected that the statistical analyses used will yield comprehensive insights into the dynamics of mental health service provision, highlighting areas of unmet need and opportunities for policy intervention. By elucidating the factors that influence service availability and accessibility, this project aims to contribute valuable evidence to support the optimization of mental health care delivery across the United States.
+
+```{r include = FALSE}
+# In addition to these advanced statistical techniques, we plan to conduct post-hoc analyses following ANOVA to pinpoint the specific groups or time periods driving observed differences. The integration of chi-square tests for categorical data will further enrich our understanding of the distribution of services across different facility types and demographic groups.
+```
+
+
+```{r echo=FALSE, message=FALSE, fig.width=8, fig.height=6}
+######################FACILTYPE PSYCOTHEYRAPY YEAR###############################
+data("data_start_2014")
+library(dplyr)
+library(ggplot2)
+tele2122_clean <- data_start_2014 %>%
+  filter(!FACILITYTYPE%in% c("L","M","-1","-5","-7"))
+
+df_summarized <- tele2122_clean %>%
+  group_by(YEAR, FACILITYTYPE, TREATPSYCHOTHRPY) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  filter(!TREATPSYCHOTHRPY%in% c("L","M","-1","-5","-7")) %>%
+mutate(TREATPSYCHOTHRPY = as.character(TREATPSYCHOTHRPY), # Convert to character if it's not already
+       TREATPSYCHOTHRPY = recode(TREATPSYCHOTHRPY,
+                             "0" = 'No treatment',
+                             "1" = 'Treatment',),
+       TREATPSYCHOTHRPY = factor(TREATPSYCHOTHRPY))
+
+p_all <- ggplot(data = df_summarized, aes(x = YEAR, y = Count, fill = TREATPSYCHOTHRPY)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~FACILITYTYPE) +
+  labs(title = "Psychotherapy Treatment by Facility Type Over Years",
+       x = "Year",
+       y = "Count") +
+  theme_minimal()
+
+print(p_all)
+#################################################################
+
+```
