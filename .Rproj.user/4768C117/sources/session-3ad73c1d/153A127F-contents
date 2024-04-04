@@ -1,0 +1,188 @@
+---
+title: "Statistical Analysis of SRVC113 by Every Other Variable, by Year"
+output: pdf_document
+header-includes:
+  - \usepackage{longtable}
+  - \usepackage{xcolor}
+  - \usepackage{colortbl}
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(broom)
+library(knitr)
+library(kableExtra)
+
+# cat("
+# \\usepackage{longtable}
+# \\usepackage{xcolor}
+# \\usepackage{colortbl}
+# ", sep="\n")
+# 
+# 
+# cat("
+# \\usepackage{xcolor}
+# \\usepackage{colortbl}
+# ", sep="\n")
+
+# Assuming your data is loaded into a dataframe named `data`
+# data <- read.csv("your_data.csv")
+load("~/GitHub/nmhss/data/data_start_2014_filter.rda")
+
+is_binary_factor <- function(column) {
+  if (is.factor(column)) {
+    return(all(levels(column) %in% c("0", "1")))
+  } else {
+    return(TRUE) # Keep non-factor columns
+  }
+}
+
+perform_two_prop_z_test <- function(data, var1, var2) {
+  table <- table(data[[var1]], data[[var2]])
+  x <- c(table[1,1], table[2,1]) # Success counts
+  n <- c(sum(table[1,]), sum(table[2,])) # Total counts
+  
+  test <- tryCatch({
+    prop.test(x, n)
+  }, warning = function(w) {
+    return(NA)
+  }, error = function(e) {
+    return(NA)
+  }, finally = {})
+  tidy(test)
+}
+```
+
+
+
+
+
+
+
+```{r summary-table-setup, include=FALSE}
+# Assuming your setup and function definitions are already in place
+
+# Initialize an empty list to store results
+analysis_results <- list()
+
+years <- unique(data_start_2014_filter$YEAR)
+for (year in years) {
+  data_year <- filter(data_start_2014_filter, YEAR == year) %>%
+               select(which(sapply(., is_binary_factor))) %>%
+               mutate_if(is.numeric, as.factor)
+  
+  target_var <- "SRVC113"
+  other_vars <- setdiff(names(data_year), target_var)
+  
+  for (var in other_vars) {
+    if (var != "YEAR") {
+      result <- perform_two_prop_z_test(data_year, target_var, var)
+      analysis_results[[year]][[var]] <- min(result$p.value, na.rm = TRUE)  # Storing the minimum p-value
+    }
+  }
+}
+
+# Transform analysis_results into a dataframe for the summary table
+p_values_df <- tibble(Variable = unique(unlist(lapply(analysis_results, names))))
+for (year in years) {
+  year_p_values <- sapply(p_values_df$Variable, function(var) analysis_results[[as.character(year)]][[var]] %>% as.numeric())
+  p_values_df[[as.character(year)]] <- year_p_values
+}
+p_values_df[is.na(p_values_df)] <- "-"  # Replace NA with "-"
+
+
+# Assuming p_values_df is already created and contains p-values for various tests
+
+# Function to apply LaTeX coloring based on p-value significance
+apply_coloring <- function(p_value) {
+  if (!is.na(p_value) && p_value > 0.05) {
+    # Applying green color for significant p-values
+    return(sprintf("\\textbf{\\textit{%.3f}}", p_value))
+  } else {
+    # Formatting non-significant p-values without coloring
+    return(sprintf("%.3f", p_value))
+  }
+}
+# "\\textbf{\\textit{%.3f}}"
+#"\\cellcolor{green}{%.3f}"
+# Apply this function to each p-value in your dataframe
+for (col in names(p_values_df)[-1]) { # Assuming the first column is not p-values but variable names or similar
+  p_values_df[col] <- sapply(p_values_df[[col]], function(x) ifelse(x == "-", x, apply_coloring(as.numeric(x))))
+}
+
+```
+
+
+```{r, echo=FALSE, results='asis'}
+# Ensure you have the necessary LaTeX package for cell coloring
+
+
+
+
+
+# Generate the summary table with formatted p-values
+
+
+# when using green get rid of striped command
+final_summary_table <- kable(p_values_df, format = "latex", longtable = TRUE, booktabs = TRUE, caption = "P-values by SRVC113 and Year", escape = FALSE) %>%
+  kable_styling(latex_options = c( "striped","repeat_header"), font_size = 7) %>%
+  column_spec(1, bold = TRUE) 
+
+# Print the table
+print(final_summary_table)
+
+
+
+
+
+
+```
+
+```{r year-analysis, echo=FALSE, results='asis'}
+# years <- unique(data_start_2014_filter$YEAR)
+# 
+# for (year in years) {
+#   cat("\\pagebreak")
+#   cat(sprintf("## Statistical Analysis for %s \n", year))
+#   
+#   data_year <- filter(data_start_2014_filter, YEAR == year) %>% 
+#                select(which(sapply(., is_binary_factor))) %>%
+#                mutate_if(is.numeric, as.factor)
+#   
+#   target_var <- "SRVC62"
+#   other_vars <- setdiff(names(data_year), target_var)
+#   
+#   results <- list()
+#   
+#   for (var in other_vars) {
+#     if (var != "YEAR") {
+#       two_prop_z_result <- perform_two_prop_z_test(data_year, target_var, var)
+#       
+#       # Filter out unnecessary columns here
+#       two_prop_z_result <- two_prop_z_result %>%
+#                            select(-statistic, -method) # Exclude 'statistic' and 'method'
+#       
+#       # Combine results
+#       combined_results <- bind_rows(Two_prop_Z = two_prop_z_result, .id = "Test")
+#       combined_results$Variable <- var
+#       
+#       results[[var]] <- combined_results
+#     }
+#   }
+#   
+#   # Combine all results into a single dataframe
+#   final_results <- bind_rows(results, .id = "Comparison")
+#   
+#   # Exclude the 'df' (degrees of freedom) and 'method' columns from the final table
+#   final_results <- final_results %>% 
+#                     select(Comparison,Test,p.value,parameter) # Adjust as needed
+# 
+#   # Output the results for this year
+#   final_table <- kable(final_results, caption = sprintf("Statistical Analysis for Year %s", year), escape = FALSE) %>%
+#           kable_styling(bootstrap_options = c("striped", "hover")) %>%
+#           row_spec(which(final_results$p.value < 0.05), background = "green")
+#   
+#   print(final_table)
+# }
+```
+
